@@ -1,26 +1,14 @@
-// main.cpp
-// ─────────────────────────────────────────────────────────────────────
-// Entry point – wires the order book and market simulator together
-// and runs a benchmark.
-//
-// The main loop is intentionally simple:
-//   1. Simulator generates a request (new / cancel / modify)
-//   2. Order book processes it and produces execution events
-//   3. We feed those events back into the simulator so it knows which
-//      orders are still alive (needed for valid cancel/modify targets)
-//   4. Repeat until the simulator has sent all its messages
-//
-// The event feedback loop in step 3 is important – the simulator
-// and the book don't share state directly. The simulator learns about
-// the book's state through the same ExecutionReports that any real
-// consumer would see. Acknowledged means the order is resting,
-// Canceled means it's gone, and Filled with zero remaining means it
-// was fully consumed.
-//
-// After the run, we print the final book state and a performance
-// summary. The throughput number (messages/sec) is the main metric
-// we care about when optimizing.
-// ─────────────────────────────────────────────────────────────────────
+// Entry point where we set up the simulator and order book, then run the main loop.
+// basically the main loop is simple that it repeats these following steps:
+//   1. Simulator generates a request, either its new, cancel, or modify
+//   2. Order book processes the request and produces a list of events
+//   3. Simulator processes the events to keep its state in sync
+//   4. Repeat until we hit the total message count
+
+// mind you that the simulator using events from the order book to track its active orders,
+// so it can pick valid targets for cancels and modifies. this keeps the simulator view consistent with the actual book state.
+
+// the primary metric at the end of the run is throughput that we got from the elapsed time and total messages processed.
 
 #include "OrderBook.h"
 #include "MarketSimulator.h"
@@ -48,8 +36,8 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     while (!simulator.done()) {
-        OrderRequest req = simulator.nextOrder();
-        book.processOrder(req);
+        OrderRequest request = simulator.nextOrder();
+        book.processOrder(request);
 
         for (const auto& event : book.events()) {
             switch (event.type) {

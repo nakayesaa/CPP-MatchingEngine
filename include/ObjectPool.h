@@ -1,29 +1,17 @@
-// ObjectPool.h
-// ─────────────────────────────────────────────────────────────────────
-// A pre-allocated object pool for fixed-size objects.
-//
-// In a matching engine, we're creating and destroying orders constantly –
-// potentially millions per second. Hitting the heap allocator every time
-// would kill performance, so instead we allocate all the Order objects
-// up front in one big contiguous vector and hand them out on demand.
-//
-// How it works:
-//   - pool_ is a std::vector<T> that holds the actual objects in memory.
-//     This is allocated once at construction and never resized.
-//   - freeList_ is a stack of pointers (std::vector<T*>) pointing into pool_.
-//     When you need an object, pop a pointer off the free list. When you're
-//     done, push it back. That's it – O(1) acquire and release, no malloc.
-//
-// acquire() grabs an object from the free list. It asserts if the pool is
-// exhausted, which is intentional – running out of pool space means the
-// capacity was misconfigured, and we want to catch that immediately
-// rather than silently degrading.
-//
-// release() resets the object (via T::reset()) and returns it to the free list.
-// The reset is important so we don't accidentally carry stale state from
-// a previous order into a new one.
-// ─────────────────────────────────────────────────────────────────────
 
+// A pre-allocated object pool for fixed-size objects.
+// In a matching engine, we will constantly creating and destroying millions orders per second
+// Hitting the heap allocator every time would kill performance, so instead we allocate all the Order objects in one big block
+
+// the objectPool work as follows:
+// pool_ is a std::vector<T> that holds the actual objects in memory. allocated once at construction and never changed.
+// while freeList_, is a std::vector<T*> that holds pointers to available objects in the pool_.
+
+// acquire() pop a pointer from freeList_ and return it, since this pointer points to an object in pool_.
+//we can use this pointer to access the object directly without any extra allocation.
+
+// while release() push the pointer back to freeList_ for future reuse.
+// but since we will use the object again, we call reset() on the object to make sure there are no stale data leftover.
 #pragma once
 #include <vector>
 #include <cstddef>
