@@ -1,40 +1,7 @@
-// OrderBook.h
-// ─────────────────────────────────────────────────────────────────────
-// The central order book – this is where the actual matching happens.
-//
-// The book maintains two sorted sides:
-//   bids_ – buy orders, sorted highest price first (std::greater)
-//   asks_ – sell orders, sorted lowest price first (default std::less)
-//
-// Both sides are std::map<Price, PriceLevel>, which gives us O(log n)
-// insertion and removal of price levels, and O(1) access to the best
-// bid/ask since std::map keeps things sorted via a red-black tree.
-//
-// orderIndex_ is an unordered_map that maps OrderId → Order*, so we
-// can look up any order in O(1) for cancellations and modifications.
-// Without this, canceling an order would require searching through
-// price levels, which would be way too slow.
-//
-// The order lifecycle goes like this:
-//   1. processOrder() receives an OrderRequest and dispatches it
-//   2. handleNew() acquires from pool → tries to match → rests remainder
-//   3. handleCancel() looks up by id → removes from book → releases to pool
-//   4. handleModify() is cancel-then-new (no in-place modification,
-//      which means modified orders lose their time priority – this is
-//      standard exchange behavior)
-//
-// matchOrder() walks the opposite side of the book and fills as much
-// as possible at each price level. restOrder() places whatever is left
-// into the appropriate side. removeFromBook() unlinks from the price
-// level and cleans up empty levels.
-//
-// events_ is a per-request scratch buffer of ExecutionReports. It gets
-// cleared at the start of each processOrder() call, so the caller can
-// read the events produced by the most recent request.
-//
-// Stats (totalFills_, totalVolume_, etc.) are tracked incrementally
-// for the final performance summary, no post-processing needed.
-// ─────────────────────────────────────────────────────────────────────
+
+//this file is a one hell of a code 
+// so basically this is the order book class that holds all the logic for processing orders
+
 
 #pragma once
 #include "Types.h"
@@ -82,9 +49,7 @@ private:
               Price price, Quantity fillQty, Quantity remaining,
               Quantity matchedRemaining = 0);
 
-    // bids, highest price first
     std::map<Price, PriceLevel, std::greater<Price>> bids_;
-    // asks, lowest price first
     std::map<Price, PriceLevel> asks_;
 
     std::unordered_map<OrderId, Order*> orderIndex_;
@@ -92,7 +57,6 @@ private:
 
     std::vector<ExecutionReport> events_;
 
-    // stats for final report
     uint64_t totalFills_   = 0;
     uint64_t totalVolume_  = 0;
     uint64_t totalCancels_ = 0;
