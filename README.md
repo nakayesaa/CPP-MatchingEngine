@@ -142,7 +142,6 @@ MatchingEngine/
     ├── OrderBook.cpp         Core matching loop and order handling
     ├── MarketSimulator.cpp   xorshift32 RNG, O(1) active-order tracking
     ├── main.cpp              Wiring, simulation loop, timing, statistics
-    └── tests.cpp             32 correctness tests across 12 invariants
 ```
 
 ---
@@ -150,14 +149,8 @@ MatchingEngine/
 
 **Engine:**
 ```bash
-g++ -std=c++17 -O2 -I include src/OrderBook.cpp src/MarketSimulator.cpp src/main.cpp -o matching_engine
-./matching_engine
-```
-
-**Tests:**
-```bash
-g++ -std=c++17 -O2 -I include src/OrderBook.cpp src/MarketSimulator.cpp src/tests.cpp -o tests
-./tests
+cmake -B build && cmake --build build --config Release
+./build/matching_engine
 ```
 
 **Configure** in `src/main.cpp`:
